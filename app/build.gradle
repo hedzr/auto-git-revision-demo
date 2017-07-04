@@ -1,14 +1,24 @@
 apply plugin: 'com.android.application'
+apply from: '../version.gradle'
 
 android {
+    loadBuildNumber()
+    def _versionCode = project.ext.get("_versionCode"), _versionBuild = project.ext.get("_versionBuild"), _versionName = project.ext.get("_versionName")
+    println "Version: code=${_versionCode}, name=${_versionName}, build=${_versionBuild}"
+
     compileSdkVersion 25
     buildToolsVersion "26.0.0"
     defaultConfig {
         applicationId "com.hedzr.mobile.auto_git_revision_demo"
         minSdkVersion 19
         targetSdkVersion 25
-        versionCode 1
-        versionName "1.0"
+        versionCode _versionCode
+        versionName _versionName
+        buildConfigField "String", "GitHash", "\"${getGitHash()}\""
+        buildConfigField "String", "GitBranch", "${getGitBranch()}"
+        buildConfigField "String", "BuildTime", "\"${getBuildTime()}\""
+        //versionCode 1
+        //versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -17,7 +27,24 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
 }
+
+//def getCustomVersionCode() {
+//
+//    if (project.versionCodeManualOverride != null) {
+//        return project.versionCodeManualOverride
+//    }
+//
+//    // current dir is <your proj>/app, so it's likely that all your git repo files are in the dir
+//    // above.
+//    ext.repo = Grgit.open(project.file('..'))
+//
+//    // should result in the same value as running
+//    // git rev-list <checked out branch name> | wc -l
+//    def numOfCommits = ext.repo.log().size()
+//    return numOfCommits
+//}
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])

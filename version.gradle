@@ -1,0 +1,74 @@
+apply plugin: 'com.android.application'
+
+android {
+    // project.ext.set("versionCodeManualOverride", null)
+    // http://devdeeds.com/auto-increment-build-number-using-gradle-in-android/
+    def versionPropsFile = rootProject.file('version.properties')
+    def Properties versionProps = new Properties()
+    //def verBuild = 0, _versionCode = 0, _versionName
+    project.ext.set("_versionCode", 0)
+    project.ext.set("_versionBuild", 0)
+    project.ext.set("_versionName", "")
+    // Wrapping inside a method avoids auto incrementing on every gradle task run. Now it runs only when we build apk
+    ext.autoIncrementBuildNumber = {
+        if (versionPropsFile.canRead()) {
+            versionProps.load(new FileInputStream(versionPropsFile))
+            def verBuild = versionProps['VERSION_BUILD'].toInteger() + 1
+            versionProps['VERSION_BUILD'] = verBuild.toString()
+            versionProps.store(versionPropsFile.newWriter(), null)
+        } else {
+            throw new GradleException("Could not read version.properties!")
+        }
+    }
+    ext.loadBuildNumber = {
+        if (versionPropsFile.canRead()) {
+            versionProps.load(new FileInputStream(versionPropsFile))
+            def _versionName = versionProps['VERSION_NAME']
+            def _versionCode = versionProps['VERSION_CODE'].toInteger()
+            def verBuild = versionProps['VERSION_BUILD'].toInteger()
+            _versionCode = _versionCode * 100000 + (verBuild % 100000)
+            project.ext.set("_versionCode", _versionCode)
+            project.ext.set("_versionBuild", _versionBuild)
+            project.ext.set("_versionName", _versionName)
+        } else {
+            throw new GradleException("Could not read version.properties!")
+        }
+    }
+    // http://devdeeds.com/auto-increment-build-number-using-gradle-in-android/
+    // Hook to check if the release/debug task is among the tasks to be executed. Let's make use of it
+    gradle.taskGraph.whenReady { taskGraph ->
+        if (taskGraph.hasTask(assembleDebug)) {  /* when run debug task */
+            autoIncrementBuildNumber()
+        } else if (taskGraph.hasTask(assembleRelease)) { /* when run release task */
+            autoIncrementBuildNumber()
+        }
+    }
+
+    ext. getGitHash = {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-parse', '--short', 'HEAD'
+            standardOutput = stdout
+        }
+        return stdout.toString().trim()
+    }
+    ext. getGitBranch = { ->
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-parse', '--abbrev-ref', 'HEAD'
+            standardOutput = stdout
+        }
+        return "\"" + stdout.toString().trim() + "\""
+    }
+    ext. getGitVersion = {
+        return 'git rev-parse --short HEAD'.execute([], project.rootDir).text.trim()
+    }
+    ext. getBuildTime = {
+        return new Date().format("yyyy-MM-dd", TimeZone.getTimeZone("UTC"))
+    }
+
+
+    //loadBuildNumber()
+    //println "Version: code=${_versionCode}, name=${_versionName}, build=${verBuild}"
+    //println _versionCode
+}

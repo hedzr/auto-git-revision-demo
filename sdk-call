@@ -1,0 +1,8 @@
+#!/bin/bash
+
+SDK_ROOT=/Users/hz/Library/Android/sdk
+BUILD_VER=26.0.0
+
+PATH=$SDK_ROOT/build-tools/$BUILD_VER:$SDK_ROOT/platform-tools:$PATH
+
+$*
