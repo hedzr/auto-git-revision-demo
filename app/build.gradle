@@ -7,7 +7,7 @@ android {
     println "Version: code=${_versionCode}, name=${_versionName}, build=${_versionBuild}"
 
     compileSdkVersion 25
-    buildToolsVersion "26.0.0"
+    buildToolsVersion '26.0.2'
     defaultConfig {
         applicationId "com.hedzr.mobile.auto_git_revision_demo"
         minSdkVersion 19
